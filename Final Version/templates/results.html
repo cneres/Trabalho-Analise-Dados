@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analysis Results</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <style>
+        .gradient-background {
+            background: linear-gradient(135deg, #1a365d 0%, #2563eb 100%);
+        }
+
+        .glass-effect {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+        }
+
+        .result-card {
+            transform: translateY(20px);
+            animation: slideUp 0.5s ease forwards;
+        }
+
+        @keyframes slideUp {
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .auto-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(min(100%, 500px), 1fr));
+            gap: 2rem;
+        }
+
+        @media (min-width: 1024px) {
+            .auto-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (min-width: 1536px) {
+            .auto-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+    </style>
+</head>
+
+<body class="gradient-background min-h-screen">
+    <div class="container mx-auto px-4 py-12">
+        <!-- Header Section -->
+        <div class="glass-effect rounded-xl p-6 mb-8">
+            <div class="flex justify-between items-center mb-6">
+                <h1 class="text-4xl font-bold text-gray-800">Analysis Results</h1>
+                <a href="/"
+                    class="bg-blue-600 text-white py-3 px-6 rounded-lg font-semibold hover:bg-blue-700 transform hover:translate-y-[-2px] transition-all duration-200">
+                    ← Back to Upload
+                </a>
+            </div>
+
+            <!-- Analysis Information -->
+            <div class="space-y-2 text-gray-600 border-t pt-4">
+                <p class="flex items-center">
+                    <span class="font-semibold mr-2">File:</span>
+                    <span class="bg-blue-50 px-2 py-1 rounded">{{ metadata.filename }}</span>
+                </p>
+                <p class="flex items-center">
+                    <span class="font-semibold mr-2">Model Selected:</span>
+                    <span class="bg-blue-50 px-2 py-1 rounded">{{ metadata.model_type|replace('_', ' ')|title }}</span>
+                </p>
+                <p class="flex items-center">
+                    <span class="font-semibold mr-2">Model Status:</span>
+                    {% if metadata.retrained %}
+                    <span class="bg-green-50 text-green-700 px-2 py-1 rounded">Retrained with new data</span>
+                    {% else %}
+                    <span class="bg-gray-50 text-gray-700 px-2 py-1 rounded">Not retrained with new data</span>
+                    {% endif %}
+                </p>
+            </div>
+        </div>
+
+        <!-- Machine Learning Results -->
+        {% if visuals.ml_results %}
+        <div class="glass-effect rounded-xl p-8 mb-8 result-card">
+            <h2 class="text-3xl font-bold mb-6 text-gray-800">Machine Learning Results</h2>
+            <div class="auto-grid">
+                <div class="bg-blue-50 rounded-xl p-6">
+                    <h3 class="text-xl font-semibold mb-3 text-gray-700">Model Accuracy</h3>
+                    <p class="text-4xl font-bold text-blue-600">
+                        {{ "%.2f"|format(visuals.ml_results.accuracy * 100) }}%
+                    </p>
+                </div>
+                {% if visuals.ml_results.report %}
+                <div class="bg-gray-50 rounded-xl p-6">
+                    <h3 class="text-xl font-semibold mb-3 text-gray-700">Classification Report</h3>
+                    <pre class="font-mono text-sm overflow-x-auto">{{ visuals.ml_results.report }}</pre>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Rest of the template remains the same -->
+        {% if visuals.correlation_heatmap %}
+        <div class="glass-effect rounded-xl p-8 mb-8 result-card">
+            <h2 class="text-3xl font-bold mb-6 text-gray-800">Correlation Analysis</h2>
+            <div class="rounded-xl overflow-hidden shadow-lg">
+                <img src="data:image/png;base64,{{ visuals.correlation_heatmap }}" alt="Correlation Heatmap"
+                    class="w-full h-auto">
+            </div>
+        </div>
+        {% endif %}
+
+        <div class="auto-grid mb-8">
+            {% for key, image in visuals.items() %}
+            {% if key.startswith('distribution_') or key.startswith('categorical_') %}
+            <div class="glass-effect rounded-xl p-8 result-card h-full">
+                <h2 class="text-2xl font-bold mb-6 text-gray-800">
+                    {% if key.startswith('distribution_') %}
+                    Distribution: {{ key.split('_')[1] }}
+                    {% else %}
+                    Category Analysis: {{ key.split('_')[1] }}
+                    {% endif %}
+                </h2>
+                <div class="rounded-xl overflow-hidden shadow-lg">
+                    <img src="data:image/png;base64,{{ image }}" alt="Visualization Plot" class="w-full h-auto">
+                </div>
+            </div>
+            {% endif %}
+            {% endfor %}
+        </div>
+
+        {% if visuals.geographic_map %}
+        <div class="glass-effect rounded-xl p-8 mb-8 result-card">
+            <h2 class="text-3xl font-bold mb-6 text-gray-800">Geographic Distribution</h2>
+            <div class="rounded-xl overflow-hidden shadow-lg">
+                <div class="w-full h-[600px]">
+                    {{ visuals.geographic_map|safe }}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</body>
+
+</html>
